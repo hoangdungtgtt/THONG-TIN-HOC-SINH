@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phiếu thông tin học sinh</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start;
+            padding: 15px; padding-top: 20px;
+        }
+        .container {
+            background: white; border-radius: 18px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+            padding: 25px 20px; max-width: 480px; width: 100%;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn { from {opacity:0;transform:translateY(-20px);} to {opacity:1;transform:translateY(0);} }
+        .school-header { text-align: center; border-bottom: 2px solid #667eea; padding-bottom: 12px; margin-bottom: 18px; }
+        .school-name { font-size: 15px; font-weight: 700; color: #333; line-height: 1.4; }
+        .school-name .highlight { color: #667eea; }
+        .teacher-info { font-size: 12px; color: #666; margin-top: 4px; }
+        .teacher-info strong { color: #333; }
+        h1 { text-align: center; color: #333; font-size: 20px; margin-bottom: 4px; }
+        .subtitle { text-align: center; color: #888; font-size: 12px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-weight: 600; color: #555; margin-bottom: 6px; font-size: 13px; }
+        label span { color: #e74c3c; }
+        input[type="text"] {
+            width: 100%; padding: 11px 14px; border: 2px solid #e0e0e0;
+            border-radius: 10px; font-size: 15px; transition: all 0.3s ease;
+            background: #fafafa; color: #333; font-family: inherit;
+        }
+        input::placeholder { color: #aaa; font-style: italic; }
+        input:focus { outline: none; border-color: #667eea; background: white; box-shadow: 0 0 0 4px rgba(102,126,234,0.1); }
+        input:hover { border-color: #667eea; }
+        input.error-input { border-color: #e74c3c; background: #fff5f5; }
+        .error { color: #e74c3c; font-size: 12px; margin-top: 4px; display: none; }
+        .error.show { display: block; }
+        .section-title {
+            font-size: 13px; font-weight: 700; color: #667eea;
+            margin: 20px 0 12px 0; padding-bottom: 6px;
+            border-bottom: 1.5px dashed #667eea;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .date-group { display: grid; grid-template-columns: 1fr 1.3fr 1.2fr; gap: 8px; }
+        .date-group select {
+            width: 100%; padding: 11px 10px; border: 2px solid #e0e0e0;
+            border-radius: 10px; font-size: 15px; transition: all 0.3s ease;
+            background: #fafafa; color: #333; font-family: inherit;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center;
+            cursor: pointer; text-align: center;
+        }
+        .date-group select:focus { outline: none; border-color: #667eea; background-color: white; box-shadow: 0 0 0 4px rgba(102,126,234,0.1); }
+        .date-group select.error-input { border-color: #e74c3c; background-color: #fff5f5; }
+        .date-hint { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; }
+        .village-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 5px; }
+        .village-option { position: relative; }
+        .village-option input[type="radio"] { display: none; }
+        .village-option label {
+            display: flex; align-items: center; justify-content: center;
+            padding: 12px 6px; border: 2px solid #e0e0e0; border-radius: 10px;
+            cursor: pointer; font-size: 13px; font-weight: 600; color: #555;
+            transition: all 0.3s ease; background: #fafafa; margin: 0;
+            min-height: 50px; text-align: center;
+        }
+        .village-option label:hover { border-color: #667eea; background: #f0f2ff; transform: translateY(-2px); }
+        .village-option input[type="radio"]:checked + label {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; box-shadow: 0 5px 15px rgba(102,126,234,0.4); transform: scale(1.03);
+        }
+        .village-option input[type="radio"]:checked + label::after { content: " ✓"; font-size: 14px; }
+        .village-option.error-input label { border-color: #e74c3c; background: #fff5f5; }
+        .btn-submit {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; margin-top: 20px; letter-spacing: 0.5px;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102,126,234,0.4); }
+        .btn-submit:active { transform: translateY(0); }
+        .btn-reset {
+            width: 100%; padding: 11px; background: #f0f0f0; color: #555;
+            border: none; border-radius: 10px; font-size: 14px;
+            cursor: pointer; transition: all 0.3s ease; margin-top: 8px;
+        }
+        .btn-reset:hover { background: #e0e0e0; }
+        .summary { display: none; margin-top: 20px; }
+        .summary.show { display: block; animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from {opacity:0;transform:scale(0.96);} to {opacity:1;transform:scale(1);} }
+        .summary-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
+            border: 2px solid #667eea; border-radius: 14px; overflow: hidden;
+            box-shadow: 0 8px 25px rgba(102,126,234,0.15);
+        }
+        .summary-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; text-align: center; padding: 14px 12px;
+        }
+        .summary-header .school { font-size: 12px; font-weight: 600; opacity: 0.95; line-height: 1.3; }
+        .summary-header .title { font-size: 15px; font-weight: 800; margin-top: 4px; letter-spacing: 0.5px; }
+        .summary-header .teacher { font-size: 11px; margin-top: 4px; opacity: 0.9; font-weight: 500; }
+        .summary-body { padding: 12px 14px 16px 14px; }
+        .summary-row {
+            display: flex; padding: 8px 0; border-bottom: 1px dashed #e0e4f5;
+            align-items: flex-start; font-size: 13px;
+        }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-row .key {
+            color: #667eea; font-weight: 700; width: 42%;
+            flex-shrink: 0; padding-right: 6px; line-height: 1.35;
+        }
+        .summary-row .value {
+            color: #222; font-weight: 600; flex: 1;
+            word-break: break-word; line-height: 1.35; text-align: right;
+        }
+        .summary-row.highlight-row {
+            background: #f0f2ff; margin: 4px -8px; padding: 8px 8px;
+            border-radius: 8px; border-bottom: none;
+        }
+        .summary-row.highlight-row .key { color: #4a5bc7; }
+        .summary-row.highlight-row .value { color: #1a237e; }
+        .summary-row.phone-row {
+            background: #fff8e6; margin: 4px -8px; padding: 8px 8px;
+            border-radius: 8px; border-bottom: none;
+        }
+        .summary-row.phone-row .key { color: #b8860b; }
+        .summary-row.phone-row .value { color: #8b6914; }
+        .summary-divider {
+            text-align: center; font-size: 11px; font-weight: 700;
+            color: #667eea; margin: 10px 0 6px 0; letter-spacing: 1px;
+        }
+        .summary-footer {
+            background: #f0f2ff; padding: 10px; text-align: center;
+            font-size: 10px; color: #667eea; font-weight: 600;
+            border-top: 1px solid #e0e4f5;
+        }
+        .btn-edit {
+            width: 100%; padding: 11px; background: #fff; color: #667eea;
+            border: 2px solid #667eea; border-radius: 10px; font-size: 14px;
+            font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-top: 12px;
+        }
+        .btn-edit:hover { background: #667eea; color: white; }
+        @media (max-width: 400px) {
+            .container { padding: 20px 15px; }
+            h1 { font-size: 18px; }
+            .school-name { font-size: 14px; }
+            .summary-row { font-size: 12.5px; }
+            .summary-row .key { width: 44%; }
+            .date-group select { font-size: 14px; padding: 10px 6px; }
+            .village-option label { font-size: 12px; padding: 10px 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="school-header">
+            <div class="school-name">
+                🏫 Trường <span class="highlight">THCS Tây Thái Ninh</span> - Phân hiệu 1
+            </div>
+            <div class="teacher-info">
+                👨‍🏫 GVCN: <strong>Hoàng Anh Dũng</strong>
+            </div>
+        </div>
+
+        <div id="formSection">
+            <h1>📝 Phiếu thông tin học sinh</h1>
+            <p class="subtitle">Vui lòng điền đầy đủ thông tin bên dưới</p>
+
+            <form id="studentForm" novalidate>
+                <div class="section-title">👤 Thông tin học sinh</div>
+
+                <div class="form-group">
+                    <label for="fullName">Họ và tên học sinh <span>*</span></label>
+                    <input type="text" id="fullName" placeholder="VD: Nguyễn Văn A">
+                    <div class="error" id="err-fullName">Vui lòng nhập họ và tên học sinh</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Ngày tháng năm sinh <span>*</span></label>
+                    <div class="date-group">
+                        <select id="dobDay"><option value="">Ngày</option></select>
+                        <select id="dobMonth"><option value="">Tháng</option></select>
+                        <select id="dobYear">
+                            <option value="">Năm</option>
+                            <option value="2014">2014</option>
+                            <option value="2015">2015</option>
+                        </select>
+                    </div>
+                    <div class="date-hint">💡 Chỉ cần chọn ngày, tháng và năm sinh (2014 hoặc 2015)</div>
+                    <div class="error" id="err-dob">Vui lòng chọn đầy đủ ngày tháng năm sinh</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cccd">Số Căn cước <span>*</span></label>
+                    <input type="text" id="cccd" placeholder="Nhập số căn cước" inputmode="numeric" maxlength="12">
+                    <div class="error" id="err-cccd">Vui lòng nhập số căn cước</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Ngày cấp <span>*</span></label>
+                    <div class="date-group">
+                        <select id="capDay"><option value="">Ngày</option></select>
+                        <select id="capMonth"><option value="">Tháng</option></select>
+                        <select id="capYear"><option value="">Năm</option></select>
+                    </div>
+                    <div class="date-hint">💡 Chọn ngày, tháng, năm cấp (2015 - 2026)</div>
+                    <div class="error" id="err-ngayCap">Vui lòng chọn đầy đủ ngày cấp</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="noiCap">Nơi cấp <span>*</span></label>
+                    <input type="text" id="noiCap" placeholder="VD: BỘ CÔNG AN">
+                    <div class="error" id="err-noiCap">Vui lòng nhập nơi cấp</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="danToc">Dân tộc <span>*</span></label>
+                    <input type="text" id="danToc" placeholder="VD: Kinh">
+                    <div class="error" id="err-danToc">Vui lòng nhập dân tộc</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Nơi ở hiện tại <span>*</span></label>
+                    <div class="village-options" id="villageOptions">
+                        <div class="village-option">
+                            <input type="radio" id="vThaiGiang" name="village" value="Thôn Thái Giang">
+                            <label for="vThaiGiang">Thái Giang</label>
+                        </div>
+                        <div class="village-option">
+                            <input type="radio" id="vPhatLoc" name="village" value="Thôn Phất Lộc">
+                            <label for="vPhatLoc">Phất Lộc</label>
+                        </div>
+                        <div class="village-option">
+                            <input type="radio" id="vTrungLiet" name="village" value="Thôn Trung Liệt">
+                            <label for="vTrungLiet">Trung Liệt</label>
+                        </div>
+                    </div>
+                    <div class="error" id="err-village">Vui lòng chọn nơi ở hiện tại</div>
+                </div>
+
+                <div class="section-title">👨‍👩‍👧 Thông tin Bố (Mẹ)</div>
+
+                <div class="form-group">
+                    <label for="parentName">Họ và tên Bố (Mẹ) <span>*</span></label>
+                    <input type="text" id="parentName" placeholder="VD: Nguyễn Văn B">
+                    <div class="error" id="err-parentName">Vui lòng nhập họ tên Bố (Mẹ)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="parentCccd">Căn cước Bố / Mẹ <span>*</span></label>
+                    <input type="text" id="parentCccd" placeholder="Nhập số căn cước Bố/Mẹ" inputmode="numeric" maxlength="12">
+                    <div class="error" id="err-parentCccd">Vui lòng nhập căn cước Bố/Mẹ</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Điện thoại liên hệ khi cần <span>*</span></label>
+                    <input type="text" id="phone" placeholder="VD: 0987654321" inputmode="numeric" maxlength="11">
+                    <div class="error" id="err-phone">Vui lòng nhập số điện thoại liên hệ</div>
+                </div>
+
+                <button type="submit" class="btn-submit">✅ XÁC NHẬN</button>
+                <button type="reset" class="btn-reset">🔄 Làm mới</button>
+            </form>
+        </div>
+
+        <div class="summary" id="summarySection">
+            <div class="summary-card">
+                <div class="summary-header">
+                    <div class="school">TRƯỜNG THCS TÂY THÁI NINH - PHÂN HIỆU 1</div>
+                    <div class="title">PHIẾU THÔNG TIN HỌC SINH</div>
+                    <div class="teacher">GVCN: Hoàng Anh Dũng</div>
+                </div>
+                <div class="summary-body">
+                    <div class="summary-divider">👤 THÔNG TIN HỌC SINH</div>
+                    <div class="summary-row highlight-row">
+                        <div class="key">Họ và tên:</div>
+                        <div class="value" id="out-fullName">—</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="key">Ngày tháng năm sinh:</div>
+                        <div class="value" id="out-dob">—</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="key">Số Căn cước:</div>
+                        <div class="value" id="out-cccd">—</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="key">Ngày cấp:</div>
+                        <div class="value" id="out-ngayCap">—</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="key">Nơi cấp:</div>
+                        <div class="value" id="out-noiCap">—</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="key">Dân tộc:</div>
+                        <div class="value" id="out-danToc">—</div>
+                    </div>
+                    <div class="summary-row highlight-row">
+                        <div class="key">Nơi ở hiện tại:</div>
+                        <div class="value" id="out-village">—</div>
+                    </div>
+                    <div class="summary-divider">👨‍👩‍👧 THÔNG TIN BỐ (MẸ)</div>
+                    <div class="summary-row highlight-row">
+                        <div class="key">Họ và tên Bố (Mẹ):</div>
+                        <div class="value" id="out-parentName">—</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="key">Căn cước Bố / Mẹ:</div>
+                        <div class="value" id="out-parentCccd">—</div>
+                    </div>
+                    <div class="summary-row phone-row">
+                        <div class="key">📞 Điện thoại liên hệ:</div>
+                        <div class="value" id="out-phone">—</div>
+                    </div>
+                </div>
+                <div class="summary-footer">
+                    📱 Chụp màn hình để lưu lại phiếu thông tin
+                </div>
+            </div>
+            <button class="btn-edit" id="btnEdit">✏️ Chỉnh sửa lại</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('studentForm');
+            const formSection = document.getElementById('formSection');
+            const summarySection = document.getElementById('summarySection');
+            const btnEdit = document.getElementById('btnEdit');
+
+            const dobDay = document.getElementById('dobDay');
+            const dobMonth = document.getElementById('dobMonth');
+            const dobYear = document.getElementById('dobYear');
+            const capDay = document.getElementById('capDay');
+            const capMonth = document.getElementById('capMonth');
+            const capYear = document.getElementById('capYear');
+
+            const villageRadios = document.querySelectorAll('input[name="village"]');
+            const villageOptions = document.getElementById('villageOptions');
+
+            // Tạo ngày 1-31
+            for (let d = 1; d <= 31; d++) {
+                const o1 = document.createElement('option'); o1.value = d; o1.textContent = d; dobDay.appendChild(o1);
+                const o2 = document.createElement('option'); o2.value = d; o2.textContent = d; capDay.appendChild(o2);
+            }
+            // Tạo tháng 1-12
+            for (let m = 1; m <= 12; m++) {
+                const o1 = document.createElement('option'); o1.value = m; o1.textContent = 'Tháng ' + m; dobMonth.appendChild(o1);
+                const o2 = document.createElement('option'); o2.value = m; o2.textContent = 'Tháng ' + m; capMonth.appendChild(o2);
+            }
+            // Tạo năm cấp 2015-2026
+            for (let y = 2015; y <= 2026; y++) {
+                const o = document.createElement('option'); o.value = y; o.textContent = y; capYear.appendChild(o);
+            }
+
+            const textFields = ['fullName','cccd','noiCap','danToc','parentName','parentCccd','phone'];
+
+            // Xóa lỗi khi nhập
+            textFields.forEach(id => {
+                const input = document.getElementById(id);
+                input.addEventListener('input', function () {
+                    this.classList.remove('error-input');
+                    const err = document.getElementById('err-' + id);
+                    if (err) err.classList.remove('show');
+                });
+            });
+
+            [dobDay, dobMonth, dobYear].forEach(s => s.addEventListener('change', function () {
+                dobDay.classList.remove('error-input');
+                dobMonth.classList.remove('error-input');
+                dobYear.classList.remove('error-input');
+                document.getElementById('err-dob').classList.remove('show');
+            }));
+
+            [capDay, capMonth, capYear].forEach(s => s.addEventListener('change', function () {
+                capDay.classList.remove('error-input');
+                capMonth.classList.remove('error-input');
+                capYear.classList.remove('error-input');
+                document.getElementById('err-ngayCap').classList.remove('show');
+            }));
+
+            villageRadios.forEach(r => r.addEventListener('change', function () {
+                villageOptions.querySelectorAll('.village-option').forEach(o => o.classList.remove('error-input'));
+                document.getElementById('err-village').classList.remove('show');
+            }));
+
+            // Chỉ cho nhập số cho CCCD và SĐT
+            ['cccd','parentCccd','phone'].forEach(id => {
+                const el = document.getElementById(id);
+                el.addEventListener('input', function () {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            });
+
+            // ===== SUBMIT =====
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                let isValid = true;
+                let firstErrorEl = null;
+
+                // Kiểm tra text fields
+                textFields.forEach(id => {
+                    const input = document.getElementById(id);
+                    if (!input.value.trim()) {
+                        input.classList.add('error-input');
+                        const err = document.getElementById('err-' + id);
+                        if (err) err.classList.add('show');
+                        isValid = false;
+                        if (!firstErrorEl) firstErrorEl = input;
+                    }
+                });
+
+                // Kiểm tra ngày sinh
+                const dDob = dobDay.value, mDob = dobMonth.value, yDob = dobYear.value;
+                if (!dDob || !mDob || !yDob) {
+                    dobDay.classList.add('error-input');
+                    dobMonth.classList.add('error-input');
+                    dobYear.classList.add('error-input');
+                    document.getElementById('err-dob').classList.add('show');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = dobDay;
+                }
+
+                // Kiểm tra ngày cấp
+                const dCap = capDay.value, mCap = capMonth.value, yCap = capYear.value;
+                if (!dCap || !mCap || !yCap) {
+                    capDay.classList.add('error-input');
+                    capMonth.classList.add('error-input');
+                    capYear.classList.add('error-input');
+                    document.getElementById('err-ngayCap').classList.add('show');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = capDay;
+                }
+
+                // Kiểm tra nơi ở
+                let selectedVillage = null;
+                villageRadios.forEach(r => { if (r.checked) selectedVillage = r.value; });
+                if (!selectedVillage) {
+                    villageOptions.querySelectorAll('.village-option').forEach(o => o.classList.add('error-input'));
+                    document.getElementById('err-village').classList.add('show');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = villageOptions;
+                }
+
+                if (!isValid) {
+                    if (firstErrorEl && firstErrorEl.scrollIntoView) {
+                        firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    if (firstErrorEl && typeof firstErrorEl.focus === 'function') {
+                        try { firstErrorEl.focus(); } catch (err) { /* bỏ qua */ }
+                    }
+                    return;
+                }
+
+                // Đổ dữ liệu ra bảng tổng hợp
+                document.getElementById('out-fullName').textContent = document.getElementById('fullName').value.trim();
+                document.getElementById('out-dob').textContent = dDob + '/' + mDob + '/' + yDob;
+                document.getElementById('out-cccd').textContent = document.getElementById('cccd').value.trim();
+                document.getElementById('out-ngayCap').textContent = dCap + '/' + mCap + '/' + yCap;
+                document.getElementById('out-noiCap').textContent = document.getElementById('noiCap').value.trim();
+                document.getElementById('out-danToc').textContent = document.getElementById('danToc').value.trim();
+                document.getElementById('out-village').textContent = selectedVillage;
+                document.getElementById('out-parentName').textContent = document.getElementById('parentName').value.trim();
+                document.getElementById('out-parentCccd').textContent = document.getElementById('parentCccd').value.trim();
+                document.getElementById('out-phone').textContent = document.getElementById('phone').value.trim();
+
+                // Ẩn form, hiện bảng tổng hợp
+                formSection.style.display = 'none';
+                summarySection.classList.add('show');
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // Chỉnh sửa lại
+            btnEdit.addEventListener('click', function () {
+                summarySection.classList.remove('show');
+                formSection.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // Reset
+            form.addEventListener('reset', function () {
+                textFields.forEach(id => {
+                    document.getElementById(id).classList.remove('error-input');
+                    const err = document.getElementById('err-' + id);
+                    if (err) err.classList.remove('show');
+                });
+                [dobDay, dobMonth, dobYear, capDay, capMonth, capYear].forEach(s => s.classList.remove('error-input'));
+                document.getElementById('err-dob').classList.remove('show');
+                document.getElementById('err-ngayCap').classList.remove('show');
+                villageOptions.querySelectorAll('.village-option').forEach(o => o.classList.remove('error-input'));
+                document.getElementById('err-village').classList.remove('show');
+            });
+        });
+    </script>
+</body>
+</html>
